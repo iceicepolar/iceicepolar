@@ -17,6 +17,6 @@ An aspiring Software Engineer and Cybersecurity Engineer.
     <img src="images/CSS.svg" width="48" height="48" alt="CSS" />
     <img src="images/Github-Dark.svg" width="48" height="48" alt="Github" />
     <img src="images/TailwindCSS-Dark.svg" width="48" height="48" alt="TailwindCSS" />
-    <img src="images/Jenkins.svg" width="48" height="48" alt="Jenkins" />
+    <img src="images/Jenkins-Dark.svg" width="48" height="48" alt="Jenkins" />
     <img src="images/Postman.svg" width="48" height="48" alt="Postman" />
 </div>

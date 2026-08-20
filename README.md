@@ -13,10 +13,10 @@ An aspiring Software Engineer and Cybersecurity Engineer.
 <div align = "center" >
     <img src="images/Python-Dark.svg" width="48" height="48" alt="Python" />
     <img src="images/JavaScript.svg" width="48" height="48" alt="JavaScript" />
-    <img src="images/HTML.svg" width="48" height="48" alt="JavaScript" />
-    <img src="images/CSS.svg" width="48" height="48" alt="JavaScript" />
-    <img src="images/Github-Dark.svg" width="48" height="48" alt="JavaScript" />
-    <img src="images/TailwindCSS-Dark.svg" width="48" height="48" alt="JavaScript" />
-    <img src="images/Jenkins.svg" width="48" height="48" alt="JavaScript" />
-    <img src="images/Postman.svg" width="48" height="48" alt="JavaScript" />
+    <img src="images/HTML.svg" width="48" height="48" alt="HTML" />
+    <img src="images/CSS.svg" width="48" height="48" alt="CSS" />
+    <img src="images/Github-Dark.svg" width="48" height="48" alt="Github" />
+    <img src="images/TailwindCSS-Dark.svg" width="48" height="48" alt="TailwindCSS" />
+    <img src="images/Jenkins.svg" width="48" height="48" alt="Jenkins" />
+    <img src="images/Postman.svg" width="48" height="48" alt="Postman" />
 </div>

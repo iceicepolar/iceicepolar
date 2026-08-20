@@ -8,5 +8,5 @@ An aspiring Software Engineer and Cybersecurity Engineer.
 - 📫 Reach me at: **[Your Email/LinkedIn Link]**
 
 ## 💻 Tech Stack
-![Python](images/Python-Light.svg)
-![JavaScript](images/JavaScript.svg)
+![Python] <img src = images/Python-Light.svg/> 
+![JavaScript] <images/JavaScript.svg/>

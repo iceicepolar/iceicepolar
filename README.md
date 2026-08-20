@@ -1,7 +1,9 @@
-<h1 align = "center"> 👋 Hi, I'm Carl
-An aspiring Software Engineer and Cybersecurity Engineer.
+<h1 align = "center"> 👋 Hi, I'm Carl </h1>
 
-## 🚀 About Me
+<h3 align = "center"> An aspiring Software Engineer and Cybersecurity Engineer. </h2>
+
+<h2 align ="center"> 🚀 About Me </h2>
+
 - 🔭 I’m currently working on **Musticker.com**
 - 🌱 I’m currently learning **Python, HTML, CSS and Javascript**
 - 💬 Ask me about **anything related to tech**

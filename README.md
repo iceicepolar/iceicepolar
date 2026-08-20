@@ -4,7 +4,7 @@
 
 <h2 align ="center"> 🚀 About Me </h2>
 
-- 🔭 I’m currently working on **Musticker.com**
+- 🔭 I’m currently working on **my skills for improvement**
 - 🌱 I’m currently learning **Python, HTML, CSS and Javascript**
 - 💬 Ask me about **anything related to tech**
 - 📫 Reach me at: **https://www.linkedin.com/in/carl-ivan-perral-54146124a/**

@@ -7,7 +7,7 @@
 - 🔭 I’m currently working on **Musticker.com**
 - 🌱 I’m currently learning **Python, HTML, CSS and Javascript**
 - 💬 Ask me about **anything related to tech**
-- 📫 Reach me at: **[Your Email/LinkedIn Link]**
+- 📫 Reach me at: **https://www.linkedin.com/in/carl-ivan-perral-54146124a/**
 
 <h2 align = "center">  💻 Tech Stack </h2>
 <br/>

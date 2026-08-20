@@ -1,0 +1,230 @@
+#!/usr/bin/env node
+/**
+ * Generates an animated SVG of a dancing dog that eats a GitHub contribution
+ * grid, row by row.
+ *
+ * usage: node scripts/generate-dog.mjs --user <login> [--out dist/dog.svg]
+ *                                      [--palette light|dark] [--duration 24]
+ *
+ * Contribution data comes from the public contributions fragment that
+ * github.com serves for every profile, so no token is required.
+ *
+ * All motion is SMIL (animate / animateTransform) rather than CSS. SMIL
+ * rotations carry their pivot inline as "rotate(angle cx cy)", which sidesteps
+ * the transform-origin / transform-box ambiguity that CSS transforms run into
+ * once they are nested inside an already-translated group.
+ */
+
+const args = process.argv.slice(2);
+const arg = (name, fallback) => {
+  const i = args.indexOf(`--${name}`);
+  return i === -1 || i + 1 >= args.length ? fallback : args[i + 1];
+};
+
+const USER = arg("user");
+const OUT = arg("out", "dist/dog.svg");
+const PALETTE = arg("palette", "light");
+const DURATION = Number(arg("duration", "24"));
+
+if (!USER) {
+  console.error("error: --user <login> is required");
+  process.exit(1);
+}
+
+const PALETTES = {
+  light: { empty: "#ebedf0", levels: ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"] },
+  dark: { empty: "#161b22", levels: ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"] },
+};
+
+if (!PALETTES[PALETTE]) {
+  console.error(`error: unknown palette "${PALETTE}" (expected light or dark)`);
+  process.exit(1);
+}
+
+// --- geometry -------------------------------------------------------------
+const PITCH = 14; // cell-to-cell distance
+const CELL = 11; // drawn size of a cell
+const ROWS = 7;
+const PAD_X = 46; // room for the tail at column 0
+const PAD_RIGHT = 46; // room for the flipped sprite at the last column
+const PAD_TOP = 26; // room for ears above row 0
+const PAD_BOTTOM = 20; // room for paws below row 6
+
+// --- timing ---------------------------------------------------------------
+const STEP_PCT = 3; // share of the loop spent dropping down one row
+const ROW_PCT = (100 - STEP_PCT * (ROWS - 1)) / ROWS; // ...and traversing one row
+const rowStart = (r) => r * (ROW_PCT + STEP_PCT);
+const rowEnd = (r) => rowStart(r) + ROW_PCT;
+const isLTR = (r) => r % 2 === 0;
+
+// --- data -----------------------------------------------------------------
+async function fetchDays(login) {
+  const url = `https://github.com/users/${encodeURIComponent(login)}/contributions`;
+  const res = await fetch(url, {
+    headers: { "user-agent": "dog-contribution-grid", accept: "text/html" },
+  });
+  if (!res.ok) throw new Error(`github returned ${res.status} for ${url}`);
+  const html = await res.text();
+
+  // Attribute order on the day cells has changed before now, so try both.
+  const found = new Map();
+  const patterns = [
+    /data-date="(\d{4}-\d{2}-\d{2})"[^>]*?data-level="(\d)"/g,
+    /data-level="(\d)"[^>]*?data-date="(\d{4}-\d{2}-\d{2})"/g,
+  ];
+  patterns.forEach((re, flipped) => {
+    let m;
+    while ((m = re.exec(html))) {
+      const date = flipped ? m[2] : m[1];
+      const level = Number(flipped ? m[1] : m[2]);
+      if (!found.has(date)) found.set(date, level);
+    }
+  });
+  if (!found.size) throw new Error("could not parse any contribution days from the response");
+
+  return [...found.entries()]
+    .map(([date, level]) => ({ date, level }))
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+
+// --- sprite ---------------------------------------------------------------
+const COAT = "#e0a458";
+const COAT_DARK = "#c07f33";
+const BELLY = "#f7e3c4";
+const INK = "#3d2b1f";
+const COLLAR = "#e05263";
+
+// Each moving part sits inside a static translate to its pivot, so the part
+// itself is drawn around (0,0) and can be rotated about that point.
+function dogSprite() {
+  const leg = (fill) => `<rect x="-2.3" y="0" width="4.6" height="12.5" rx="2.3" fill="${fill}"/>`;
+  const trot = (from, to) =>
+    `<animateTransform attributeName="transform" type="rotate" dur="0.5s" repeatCount="indefinite"` +
+    ` calcMode="spline" keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"` +
+    ` values="${from} 0 0;${to} 0 0;${from} 0 0"/>`;
+
+  return `
+    <g transform="translate(-33,-8)">
+      <path d="M0,0 C-7,-1 -10,-6 -8,-11" fill="none" stroke="${COAT_DARK}" stroke-width="4.6" stroke-linecap="round"/>
+      <animateTransform attributeName="transform" type="rotate" dur="0.22s" repeatCount="indefinite"
+        values="-24 0 0;24 0 0;-24 0 0"/>
+    </g>
+
+    <g transform="translate(-29,-2)"><g>${leg(COAT_DARK)}${trot(-22, 22)}</g></g>
+    <g transform="translate(-15,-2)"><g>${leg(COAT_DARK)}${trot(22, -22)}</g></g>
+
+    <ellipse cx="-22" cy="-4" rx="12" ry="8.5" fill="${COAT}"/>
+    <ellipse cx="-20" cy="-1" rx="8.6" ry="5" fill="${BELLY}"/>
+
+    <g transform="translate(-24,-2)"><g>${leg(COAT)}${trot(22, -22)}</g></g>
+    <g transform="translate(-10,-2)"><g>${leg(COAT)}${trot(-22, 22)}</g></g>
+
+    <g transform="translate(-9,-4)">
+      <g>
+        <circle cx="5" cy="-3" r="7.6" fill="${COAT}"/>
+        <path d="M0,-9 C-6,-9 -7,-1 -3,2 C1,1 1,-5 0,-9Z" fill="${COAT_DARK}"/>
+        <ellipse cx="11.5" cy="0.5" rx="5.2" ry="4.1" fill="${BELLY}"/>
+        <circle cx="15.1" cy="-1.2" r="1.8" fill="${INK}"/>
+        <path d="M11,2.6 Q13.4,4.6 15.4,3" fill="none" stroke="${INK}" stroke-width="1" stroke-linecap="round"/>
+        <circle cx="6" cy="-5" r="1.8" fill="${INK}"/>
+        <animateTransform attributeName="transform" type="rotate" dur="0.5s" repeatCount="indefinite"
+          calcMode="spline" keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+          values="-6 0 0;6 0 0;-6 0 0"/>
+      </g>
+    </g>
+
+    <path d="M-12,0.5 Q-8.5,3.6 -5,0.5" fill="none" stroke="${COLLAR}" stroke-width="2.6" stroke-linecap="round"/>
+  `;
+}
+
+// --- main -----------------------------------------------------------------
+const days = await fetchDays(USER);
+
+const firstWeekday = new Date(`${days[0].date}T00:00:00Z`).getUTCDay();
+const cells = days.map((d, i) => ({
+  ...d,
+  col: Math.floor((i + firstWeekday) / 7),
+  row: (i + firstWeekday) % 7,
+}));
+const COLS = Math.max(...cells.map((c) => c.col)) + 1;
+
+const WIDTH = PAD_X + (COLS - 1) * PITCH + CELL + PAD_RIGHT;
+const HEIGHT = PAD_TOP + (ROWS - 1) * PITCH + CELL + PAD_BOTTOM;
+
+const cellX = (col) => PAD_X + col * PITCH;
+const cellY = (row) => PAD_TOP + row * PITCH;
+const centerX = (col) => cellX(col) + CELL / 2;
+const centerY = (row) => cellY(row) + CELL / 2;
+
+// Fraction of the loop at which the dog arrives at a given cell.
+function eatFraction(col, row) {
+  const p = isLTR(row) ? col / (COLS - 1) : (COLS - 1 - col) / (COLS - 1);
+  return (rowStart(row) + p * ROW_PCT) / 100;
+}
+
+const pal = PALETTES[PALETTE];
+const n = (v) => Number(v.toFixed(3));
+
+// Only cells with contributions need to animate; an empty cell looks identical
+// before and after being eaten.
+const rects = cells
+  .map((c) => {
+    const base = `<rect x="${cellX(c.col)}" y="${cellY(c.row)}" width="${CELL}" height="${CELL}" rx="2"`;
+    const live = pal.levels[c.level];
+    if (c.level === 0) return `${base} fill="${live}"/>`;
+
+    const f = Math.min(Math.max(eatFraction(c.col, c.row), 0.002), 0.98);
+    return (
+      `${base} fill="${live}">` +
+      `<animate attributeName="fill" dur="${DURATION}s" repeatCount="indefinite"` +
+      ` values="${live};${live};${pal.empty};${pal.empty}"` +
+      ` keyTimes="0;${n(f)};${n(f + 0.008)};1"/>` +
+      `</rect>`
+    );
+  })
+  .join("");
+
+// Serpentine sweep: across row 0, drop, back across row 1, drop, and so on.
+const keyTimes = [];
+const walk = [];
+const flip = [];
+for (let r = 0; r < ROWS; r++) {
+  const from = isLTR(r) ? 0 : COLS - 1;
+  const to = isLTR(r) ? COLS - 1 : 0;
+  const facing = isLTR(r) ? "1,1" : "-1,1";
+  keyTimes.push(rowStart(r) / 100, rowEnd(r) / 100);
+  walk.push(`${n(centerX(from))},${n(centerY(r))}`, `${n(centerX(to))},${n(centerY(r))}`);
+  flip.push(facing, facing);
+}
+// Float drift can leave the final keyTime at 0.99999; SMIL wants exactly 1.
+const times = keyTimes.map((t, i) => (i === keyTimes.length - 1 ? 1 : n(t))).join(";");
+
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}" role="img">
+<title>${USER} contribution graph, eaten by a dancing dog</title>
+${rects}
+<g>
+  <animateTransform attributeName="transform" type="translate" dur="${DURATION}s" repeatCount="indefinite"
+    keyTimes="${times}" values="${walk.join(";")}"/>
+  <g>
+    <animateTransform attributeName="transform" type="scale" dur="${DURATION}s" repeatCount="indefinite"
+      keyTimes="${times}" values="${flip.join(";")}"/>
+    <g>
+      <animateTransform attributeName="transform" type="translate" dur="0.5s" repeatCount="indefinite"
+        calcMode="spline" keyTimes="0;0.5;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1"
+        values="0,0;0,-2.6;0,0"/>
+      ${dogSprite()}
+    </g>
+  </g>
+</g>
+</svg>
+`;
+
+const { writeFile, mkdir } = await import("node:fs/promises");
+const { dirname } = await import("node:path");
+await mkdir(dirname(OUT), { recursive: true });
+await writeFile(OUT, svg, "utf8");
+
+const animated = cells.filter((c) => c.level > 0).length;
+console.log(
+  `${OUT}  ${COLS}x${ROWS} cells, ${animated} animated, ${(svg.length / 1024).toFixed(1)} KB`
+);

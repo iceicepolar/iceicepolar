@@ -21,3 +21,14 @@ An aspiring Software Engineer and Cybersecurity Engineer.
     <img src="images/Postman.svg" width="48" height="48" alt="Postman" />
     <img src="images/pw.svg" width="48" height="48" alt="Playwright" />
 </div>
+
+<h2 align = "center"> 🐕 My Contributions 🐕 </h2>
+<br/>
+
+<div align = "center">
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/iceicepolar/iceicepolar/output/dog-dark.svg" />
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/iceicepolar/iceicepolar/output/dog.svg" />
+        <img alt="My contribution graph, eaten by a dancing dog" src="https://raw.githubusercontent.com/iceicepolar/iceicepolar/output/dog.svg" />
+    </picture>
+</div>
